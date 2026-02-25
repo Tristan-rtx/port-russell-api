@@ -14,6 +14,7 @@ const MongoStore = ConnectMongo?.create
   ? ConnectMongo
   : (ConnectMongo?.default?.create ? ConnectMongo.default : ConnectMongo);
 
+// App
 const app = express();
 
 // --- Config ---
@@ -25,6 +26,14 @@ if (!MONGO_URI) {
   console.error("❌ MONGO_URI manquant dans .env");
   process.exit(1);
 }
+
+// --- Imports (models + middleware + routes) ---
+const Reservation = require("./models/Reservation");
+const { requireAuth } = require("./middleware/auth");
+
+const authRoutes = require("./routes/auth.routes");
+const usersRoutes = require("./routes/users.routes");
+const catwaysRoutes = require("./routes/catways.routes");
 
 // --- Middlewares ---
 app.use(helmet());
@@ -57,32 +66,54 @@ app.use(
 
 // --- Routes (pages) ---
 app.get("/", (req, res) => {
-  // Si déjà connecté -> dashboard (qu'on construira ensuite)
   if (req.session.user) return res.redirect("/dashboard");
   return res.render("home", { error: null });
 });
 
 app.get("/api-doc", (req, res) => res.render("api-doc"));
 
-app.get("/dashboard", (req, res) => {
-  if (!req.session.user) return res.redirect("/");
-  return res.send("Dashboard (à construire)");
+app.get("/dashboard", requireAuth, async (req, res) => {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
+
+  const currentReservations = await Reservation.find({
+    startDate: { $lte: end },
+    endDate: { $gte: start },
+  }).sort({ startDate: 1 });
+
+  return res.render("dashboard", {
+    user: req.session.user,
+    today: now.toLocaleDateString(),
+    currentReservations,
+  });
 });
+
+// Placeholders (menu dashboard) — on fera les CRUD après
+app.get("/dashboard/catways", requireAuth, (req, res) => {
+  res.send("CRUD Catways (à faire)");
+});
+
+app.get("/dashboard/reservations", requireAuth, (req, res) => {
+  res.send("CRUD Réservations (à faire)");
+});
+
+app.get("/dashboard/users", requireAuth, (req, res) => {
+  res.send("CRUD Users (à faire)");
+});
+
+// --- Routes (API) ---
+app.use("/", authRoutes);
+app.use("/users", usersRoutes);
+app.use("/catways", catwaysRoutes);
+app.use("/catway", catwaysRoutes); // alias (au cas où)
 
 // --- Health check ---
 app.get("/health", (req, res) => {
   res.status(200).json({ ok: true });
 });
-
-
-const authRoutes = require("./routes/auth.routes");
-const usersRoutes = require("./routes/users.routes");
-const catwaysRoutes = require("./routes/catways.routes");
-
-app.use("/", authRoutes);
-app.use("/users", usersRoutes);
-app.use("/catways", catwaysRoutes);
-app.use("/catway", catwaysRoutes); // alias (au cas où)
 
 // --- Start ---
 (async () => {
