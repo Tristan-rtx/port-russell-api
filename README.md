@@ -111,3 +111,8 @@ mongoimport --jsonArray --db port_russell --collection reservations --file ./dat
 
 - Le port est configuré dans `.env` (par défaut **8080**).
 - Les mots de passe sont stockés en base sous forme de hash **bcrypt**.
+
+## Déploiement (non réalisé)
+
+Le déploiement Render + MongoDB Atlas n’a pas été finalisé.  
+L’application fonctionne entièrement **en local** (API + authentification + dashboard CRUD).
