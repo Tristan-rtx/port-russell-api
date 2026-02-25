@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Réservations — Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<main class="container">
+  <nav class="nav">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/dashboard/catways">Catways</a>
+    <a href="/dashboard/reservations">Réservations</a>
+    <a href="/dashboard/users">Utilisateurs</a>
+    <a href="/api-doc">Doc API</a>
+    <a href="/logout">Déconnexion</a>
+  </nav>
+
+  <h1>Réservations</h1>
+
+  <h2>Créer une réservation</h2>
+  <form class="card" method="POST" action="/dashboard/reservations">
+    <label>Catway #</label>
+    <input name="catwayNumber" type="number" required />
+    <label>Client</label>
+    <input name="clientName" required />
+    <label>Bateau</label>
+    <input name="boatName" required />
+    <label>Début</label>
+    <input name="startDate" type="date" required />
+    <label>Fin</label>
+    <input name="endDate" type="date" required />
+    <button type="submit">Créer</button>
+  </form>
+
+  <h2>Liste</h2>
+  <table>
+    <thead>
+      <tr><th>Catway</th><th>Client</th><th>Bateau</th><th>Début</th><th>Fin</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      <% reservations.forEach(r => { %>
+        <tr>
+          <td><%= r.catwayNumber %></td>
+          <td><%= r.clientName %></td>
+          <td><%= r.boatName %></td>
+          <td><%= new Date(r.startDate).toLocaleDateString() %></td>
+          <td><%= new Date(r.endDate).toLocaleDateString() %></td>
+          <td>
+            <details>
+              <summary>Modifier</summary>
+              <form method="POST" action="/dashboard/reservations/<%= r._id %>?_method=PUT">
+                <input name="catwayNumber" type="number" value="<%= r.catwayNumber %>" required />
+                <input name="clientName" value="<%= r.clientName %>" required />
+                <input name="boatName" value="<%= r.boatName %>" required />
+                <input name="startDate" type="date" value="<%= new Date(r.startDate).toISOString().slice(0,10) %>" required />
+                <input name="endDate" type="date" value="<%= new Date(r.endDate).toISOString().slice(0,10) %>" required />
+                <button type="submit">Enregistrer</button>
+              </form>
+            </details>
+
+            <form method="POST" action="/dashboard/reservations/<%= r._id %>?_method=DELETE" onsubmit="return confirm('Supprimer cette réservation ?')">
+              <button type="submit">Supprimer</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>

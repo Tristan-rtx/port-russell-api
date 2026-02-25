@@ -7,6 +7,7 @@ const session = require("express-session");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const path = require("path");
+const methodOverride = require("method-override");
 
 // connect-mongo exports differ by version (CJS/ESM). This adapter supports both.
 const ConnectMongo = require("connect-mongo");
@@ -14,7 +15,6 @@ const MongoStore = ConnectMongo?.create
   ? ConnectMongo
   : (ConnectMongo?.default?.create ? ConnectMongo.default : ConnectMongo);
 
-// App
 const app = express();
 
 // --- Config ---
@@ -31,15 +31,20 @@ if (!MONGO_URI) {
 const Reservation = require("./models/Reservation");
 const { requireAuth } = require("./middleware/auth");
 
+// API routes
 const authRoutes = require("./routes/auth.routes");
 const usersRoutes = require("./routes/users.routes");
 const catwaysRoutes = require("./routes/catways.routes");
+
+// Dashboard CRUD routes (pages)
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 // --- Middlewares ---
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 
 // Static + views (EJS)
 app.use(express.static(path.join(__dirname, "public")));
@@ -64,7 +69,7 @@ app.use(
   })
 );
 
-// --- Routes (pages) ---
+// --- Pages ---
 app.get("/", (req, res) => {
   if (req.session.user) return res.redirect("/dashboard");
   return res.render("home", { error: null });
@@ -91,24 +96,18 @@ app.get("/dashboard", requireAuth, async (req, res) => {
   });
 });
 
-// Placeholders (menu dashboard) — on fera les CRUD après
-app.get("/dashboard/catways", requireAuth, (req, res) => {
-  res.send("CRUD Catways (à faire)");
-});
+// ✅ Pages CRUD (catways/reservations/users) via router dashboard
+// - GET  /dashboard/catways
+// - GET  /dashboard/reservations
+// - GET  /dashboard/users
+// + POST/PUT/DELETE correspondants
+app.use("/dashboard", dashboardRoutes);
 
-app.get("/dashboard/reservations", requireAuth, (req, res) => {
-  res.send("CRUD Réservations (à faire)");
-});
-
-app.get("/dashboard/users", requireAuth, (req, res) => {
-  res.send("CRUD Users (à faire)");
-});
-
-// --- Routes (API) ---
+// --- API (privée) ---
 app.use("/", authRoutes);
 app.use("/users", usersRoutes);
 app.use("/catways", catwaysRoutes);
-app.use("/catway", catwaysRoutes); // alias (au cas où)
+app.use("/catway", catwaysRoutes); // alias
 
 // --- Health check ---
 app.get("/health", (req, res) => {
@@ -122,14 +121,11 @@ app.get("/health", (req, res) => {
     console.log("⏳ Connexion à MongoDB...", MONGO_URI);
 
     await mongoose.connect(MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // fail fast si Mongo ne répond pas
+      serverSelectionTimeoutMS: 5000,
     });
 
     console.log("✅ MongoDB connecté");
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Serveur démarré : http://localhost:${PORT}`);
-    });
+    app.listen(PORT, () => console.log(`🚀 Serveur démarré : http://localhost:${PORT}`));
   } catch (err) {
     console.error("❌ Erreur démarrage serveur:", err);
     process.exit(1);

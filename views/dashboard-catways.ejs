@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Catways — Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+<main class="container">
+  <nav class="nav">
+    <a href="/dashboard">Dashboard</a>
+    <a href="/dashboard/catways">Catways</a>
+    <a href="/dashboard/reservations">Réservations</a>
+    <a href="/dashboard/users">Utilisateurs</a>
+    <a href="/api-doc">Doc API</a>
+    <a href="/logout">Déconnexion</a>
+  </nav>
+
+  <h1>Catways</h1>
+
+  <h2>Créer un catway</h2>
+  <form class="card" method="POST" action="/dashboard/catways">
+    <label>Numéro</label>
+    <input name="catwayNumber" type="number" required />
+    <label>Type</label>
+    <select name="catwayType" required>
+      <option value="short">short</option>
+      <option value="long">long</option>
+    </select>
+    <label>État</label>
+    <input name="catwayState" required />
+    <button type="submit">Créer</button>
+  </form>
+
+  <h2>Liste</h2>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Type</th><th>État</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+      <% catways.forEach(c => { %>
+        <tr>
+          <td><%= c.catwayNumber %></td>
+          <td><%= c.catwayType %></td>
+          <td>
+            <form method="POST" action="/dashboard/catways/<%= c.catwayNumber %>?_method=PUT">
+              <input name="catwayState" value="<%= c.catwayState %>" />
+              <button type="submit">Modifier état</button>
+            </form>
+          </td>
+          <td>
+            <form method="POST" action="/dashboard/catways/<%= c.catwayNumber %>?_method=DELETE" onsubmit="return confirm('Supprimer ce catway ?')">
+              <button type="submit">Supprimer</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</main>
+</body>
+</html>
