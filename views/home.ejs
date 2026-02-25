@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Port de Russell - Connexion</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Port de Plaisance de Russell</h1>
+    <p>Application de gestion des réservations de catways (API privée).</p>
+
+    <% if (error) { %>
+      <p class="error"><%= error %></p>
+    <% } %>
+
+    <form method="POST" action="/login" class="card">
+      <h2>Connexion</h2>
+      <label>Email</label>
+      <input name="email" type="email" required />
+
+      <label>Mot de passe</label>
+      <input name="password" type="password" required />
+
+      <button type="submit">Se connecter</button>
+    </form>
+
+    <p><a href="/api-doc">Voir la documentation de l’API</a></p>
+  </main>
+</body>
+</html>
